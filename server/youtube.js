@@ -68,6 +68,6 @@ export async function fetchVideoInfo(id) {
     info = await viaWatchPage(id);
   }
   cache.set(id, info);
-  if (cache.size > 500) cache.delete(cache.keys().next().value);
+  if (cache.size > 2000) cache.delete(cache.keys().next().value);
   return info;
 }

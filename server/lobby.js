@@ -1,15 +1,13 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { ChainGame } from './games/chain.js';
 import { ClassicGame } from './games/classic.js';
 import { CreatorGame } from './games/creator.js';
 import { InventGame } from './games/invent.js';
+import { loadVideoLinks } from './library.js';
 import { clamp, cleanText, makeCode, uid } from './util.js';
 import { fetchVideoInfo, parseVideoId } from './youtube.js';
 
 const MAX_PLAYERS = 12;
-const MAX_VIDEOS = 80;
+const MAX_VIDEOS = 400;
 const LOBBY_GRACE_MS = 45_000;
 const HOST_GRACE_MS = 12_000;
 const COLORS = ['#ff4d6d', '#ffd23f', '#35e0d0', '#8b6cff', '#ff9f43', '#b6f34d', '#4dabff', '#ff7ad9', '#ffffff', '#9aa5ff', '#5eead4', '#fca5a5'];
@@ -26,17 +24,6 @@ const DEFAULT_SETTINGS = {
   drawSec: 75,
   chainRounds: 0,
 };
-
-const PLAYLIST_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'playlists');
-
-function readPlaylist(name) {
-  try {
-    const file = path.join(PLAYLIST_DIR, path.basename(name) + '.txt');
-    return fs.readFileSync(file, 'utf8').split(/\r?\n/).filter((l) => l.trim() && !l.trim().startsWith('#')).join('\n');
-  } catch {
-    return null;
-  }
-}
 
 const publicVideo = (v) => ({ uid: v.uid, id: v.id, title: v.title, author: v.author, by: v.by });
 
@@ -56,9 +43,9 @@ export class Lobby {
     this.loadDefaultPool();
   }
 
-  /** La liste intégrée (playlists/default.txt) alimente chaque nouveau lobby. */
+  /** La liste de vidéos du jeu (Supabase, sinon playlists/default.txt) alimente chaque nouveau lobby. */
   async loadDefaultPool() {
-    const text = readPlaylist('default');
+    const text = await loadVideoLinks();
     if (text) await this.addVideos({ name: 'liste du jeu', id: null }, text);
   }
 
@@ -208,7 +195,7 @@ export class Lobby {
     const tokens = String(Array.isArray(urls) ? urls.join('\n') : urls ?? '')
       .split(/[\s,;]+/)
       .filter(Boolean)
-      .slice(0, 40);
+      .slice(0, MAX_VIDEOS);
     const seen = new Set(this.videos.map((v) => v.id));
     const fresh = [];
     let invalid = 0;
