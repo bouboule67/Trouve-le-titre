@@ -1,0 +1,17 @@
+{
+  "name": "trouve-le-titre",
+  "version": "1.0.0",
+  "description": "Jeu multijoueur entre potes : devine le titre, dessine la miniature, retrouve le créateur.",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
